@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 HADO Spring Cup ROOKIE — 선수 프로필</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090f;
+    --bg2: #0f0f1a;
+    --bg3: #16162a;
+    --card: #1a1a2e;
+    --card2: #1e1e35;
+    --accent: #4f6ef7;
+    --accent2: #7c3aed;
+    --red: #ef4444;
+    --green: #22c55e;
+    --gold: #f59e0b;
+    --text: #f0f0ff;
+    --muted: #8888aa;
+    --border: rgba(255,255,255,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─ 배경 장식 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 80% 20%, rgba(79,110,247,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 30% at 20% 80%, rgba(124,58,237,0.10) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+  /* ─ 헤더 */
+  .header {
+    padding: 40px 0 32px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(36px, 7vw, 64px);
+    letter-spacing: 0.06em;
+    line-height: 1;
+    color: var(--text);
+  }
+  .header-title span { color: var(--accent); }
+
+  /* ─ 검색 */
+  .search-wrap {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 40px;
+    align-items: center;
+  }
+  .search-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 16px;
+    font-family: 'Noto Sans KR', sans-serif;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-input::placeholder { color: var(--muted); }
+  .search-input:focus { border-color: var(--accent); }
+  .search-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 24px;
+    font-size: 14px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .search-btn:hover { opacity: 0.85; }
+
+  /* 자동완성 드롭다운 */
+  .autocomplete-wrap { position: relative; flex: 1; }
+  .autocomplete-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0; right: 0;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 100;
+    display: none;
+  }
+  .autocomplete-list.open { display: block; }
+  .ac-item {
+    padding: 10px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.1s;
+  }
+  .ac-item:hover { background: rgba(79,110,247,0.15); }
+  .ac-team { font-size: 11px; color: var(--muted); }
+
+  /* ─ 상태 메시지 */
+  .status {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .status-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* ─ 선수 프로필 카드 영역 */
+  #profile { display: none; }
+  #profile.visible { display: block; }
+
+  /* ─ 선수 헤더 */
+  .player-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .player-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(79,110,247,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .player-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+  .player-info { flex: 1; }
+  .player-playname {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .player-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .player-meta-item {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .player-meta-item strong { color: var(--text); font-weight: 600; }
+  .top-player-badge {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  /* ─ 스탯 카드 그리드 */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media(max-width:600px) { .stat-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: rgba(79,110,247,0.35); }
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red   { color: var(--red); }
+  .stat-value.gold  { color: var(--gold); }
+  .stat-value.blue  { color: var(--accent); }
+  .stat-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ─ 섹션 */
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .section-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* 구간별 비교 */
+  .stage-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .stage-col {
+    padding: 20px 24px;
+    text-align: center;
+  }
+  .stage-col + .stage-col {
+    border-left: 1px solid var(--border);
+  }
+  .stage-name {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .stage-stats {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+  }
+  .stage-stat { text-align: center; }
+  .stage-stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    line-height: 1;
+  }
+  .stage-stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; letter-spacing: 0.08em; }
+
+  /* 경기 로그 테이블 */
+  .game-table { width: 100%; border-collapse: collapse; }
+  .game-table th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .game-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .game-table tr:last-child td { border-bottom: none; }
+  .game-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .badge-prelim { background: rgba(79,110,247,0.18); color: #7c9cf8; }
+  .badge-main   { background: rgba(245,158,11,0.18); color: #f8ba4f; }
+  .kda-pos { color: var(--green); font-weight: 700; }
+  .kda-neg { color: var(--red); font-weight: 700; }
+  .kda-neu { color: var(--muted); }
+
+  /* 업데이트 시각 */
+  .update-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+  .update-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* 선수 목록 칩 */
+  .roster-section { margin-bottom: 36px; }
+  .roster-title {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .roster-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip:hover { background: var(--card); border-color: var(--accent); color: var(--accent); }
+  .chip-team { font-size: 10px; color: var(--muted); }
+
+  .no-data { padding: 32px 24px; text-align: center; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-eyebrow">루키 선수 스탯 대시보드</div>
+    <h1 class="header-title">2026 HADO<br><span>SPRING CUP ROOKIE</span></h1>
+  </header>
+
+  <!-- API 연결 설정 -->
+  <div id="api-setup-box" style="background:var(--card);border:1px solid rgba(79,110,247,0.4);border-radius:14px;padding:24px 28px;margin-bottom:28px;">
+    <div style="font-size:12px;color:var(--accent);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">Step 3에서 복사한 URL 붙여넣기</div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <input id="api-url-input" type="text" placeholder="https://script.google.com/macros/s/.../exec"
+        style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--text);font-family:'Noto Sans KR',sans-serif;outline:none;">
+      <button id="api-connect-btn"
+        style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:12px 20px;font-size:13px;font-family:'Noto Sans KR',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;">
+        연결
+      </button>
+    </div>
+    <div id="api-setup-msg" style="font-size:12px;color:var(--muted);margin-top:8px;">URL을 입력하고 연결 버튼을 누르면 자동으로 데이터를 가져옵니다.</div>
+  </div>
+
+  <!-- 업데이트 시각 -->
+  <div class="update-bar" id="update-bar" style="display:none;">
+    <div class="update-dot"></div>
+    <span id="update-time">연결 중…</span>
+  </div>
+
+  <!-- 검색 -->
+  <div class="search-wrap">
+    <div class="autocomplete-wrap">
+      <input class="search-input" id="search" type="text"
+             placeholder="플레이어 네임 검색 (예: CHLOE, URI …)"
+             autocomplete="off">
+      <div class="autocomplete-list" id="ac-list"></div>
+    </div>
+    <button class="search-btn" id="search-btn">검색</button>
+  </div>
+
+  <!-- 선수 목록 칩 -->
+  <div class="roster-section">
+    <div class="roster-title">전체 선수</div>
+    <div class="roster-chips" id="roster-chips">
+      <div class="chip" style="color:var(--muted); cursor:default;">데이터 로드 중…</div>
+    </div>
+  </div>
+
+  <!-- 프로필 영역 -->
+  <div id="profile">
+    <!-- 선수 헤더 -->
+    <div class="player-header" id="player-header"></div>
+
+    <!-- 통합 스탯 -->
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <!-- 구간별 스탯 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-dot"></div>
+        구간별 스탯
+      </div>
+      <div class="stage-compare" id="stage-compare"></div>
+    </div>
+
+    <!-- 경기 로그 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-dot" style="background:var(--gold)"></div>
+        경기별 기록
+      </div>
+      <table class="game-table" id="game-table">
+        <thead>
+          <tr>
+            <th>단계</th>
+            <th>경기</th>
+            <th>대전</th>
+            <th>킬</th>
+            <th>데스</th>
+            <th>평가</th>
+          </tr>
+        </thead>
+        <tbody id="game-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 상태 메시지 -->
+  <div class="status" id="status">
+    <div class="status-icon">🔍</div>
+    <div>검색할 선수 네임을 입력하세요</div>
+  </div>
+
+</div>
+
+<script>
+const POLL_INTERVAL = 5000; // 5초마다 갱신
+
+let allData = null;
+let pollTimer = null;
+let currentPlayer = null;
+
+// ── 데이터 로드 ──────────────────────────────────────────
+async function fetchData() {
+  try {
+    const res = await fetch(API_URL + '?t=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    allData = json;
+    document.getElementById('update-time').textContent =
+      '실시간 연동 중 · 마지막 갱신: ' + new Date().toLocaleTimeString('ko-KR');
+    renderRosterChips();
+    if (currentPlayer) renderProfile(currentPlayer);
+  } catch(e) {
+    document.getElementById('update-time').textContent = '⚠ 데이터 로드 실패 — ' + e.message;
+  }
+}
+
+function startPolling() {
+  fetchData();
+  pollTimer = setInterval(fetchData, POLL_INTERVAL);
+}
+
+// ── 선수 목록 칩 ─────────────────────────────────────────
+function renderRosterChips() {
+  if (!allData) return;
+  const container = document.getElementById('roster-chips');
+  const players = Object.values(allData.players || {})
+    .sort((a,b) => a.playname.localeCompare(b.playname));
+
+  if (!players.length) {
+    container.innerHTML = '<div class="chip" style="color:var(--muted);cursor:default;">아직 선수 데이터 없음</div>';
+    return;
+  }
+
+  container.innerHTML = players.map(p =>
+    `<div class="chip" onclick="selectPlayer('${p.playname}')">
+      ${p.playname}
+      <span class="chip-team">${p.team || ''}</span>
+    </div>`
+  ).join('');
+}
+
+// ── 검색 / 자동완성 ──────────────────────────────────────
+const searchInput = document.getElementById('search');
+const acList = document.getElementById('ac-list');
+
+searchInput.addEventListener('input', function() {
+  const q = this.value.trim().toUpperCase();
+  if (!q || !allData) { acList.classList.remove('open'); return; }
+
+  const matches = Object.values(allData.roster || {})
+    .filter(p => p.playname.includes(q))
+    .slice(0, 8);
+
+  if (!matches.length) { acList.classList.remove('open'); return; }
+
+  acList.innerHTML = matches.map(p =>
+    `<div class="ac-item" onclick="selectPlayer('${p.playname}')">
+      <strong>${p.playname}</strong>
+      <span class="ac-team">${p.team || ''} · ${p.name || ''}</span>
+    </div>`
+  ).join('');
+  acList.classList.add('open');
+});
+
+searchInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    acList.classList.remove('open');
+    doSearch();
+  }
+});
+
+document.getElementById('search-btn').addEventListener('click', doSearch);
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.autocomplete-wrap')) acList.classList.remove('open');
+});
+
+function doSearch() {
+  const q = searchInput.value.trim().toUpperCase();
+  if (!q) return;
+  selectPlayer(q);
+}
+
+function selectPlayer(playname) {
+  currentPlayer = playname;
+  searchInput.value = playname;
+  acList.classList.remove('open');
+  renderProfile(playname);
+}
+
+// ── 프로필 렌더 ──────────────────────────────────────────
+function renderProfile(playname) {
+  const profile = document.getElementById('profile');
+  const status  = document.getElementById('status');
+
+  if (!allData) {
+    status.innerHTML = '<div class="status-icon">⏳</div><div>데이터 로드 중…</div>';
+    status.style.display = 'block';
+    profile.classList.remove('visible');
+    return;
+  }
+
+  // roster에서 기본 정보 찾기
+  const rosterInfo = Object.values(allData.roster || {})
+    .find(p => p.playname === playname);
+
+  // stats 찾기
+  const stats = allData.players[playname];
+
+  if (!rosterInfo && !stats) {
+    status.innerHTML = `<div class="status-icon">❌</div><div>'${playname}' 선수를 찾을 수 없습니다</div>`;
+    status.style.display = 'block';
+    profile.classList.remove('visible');
+    return;
+  }
+
+  const info = rosterInfo || (stats ? { playname, name: stats.name, team: stats.team, club: stats.club } : {});
+  const s = stats || {
+    totalKills:0, totalDeaths:0, kd:0,
+    prelimKills:0, prelimDeaths:0, prelimGames:0,
+    mainKills:0, mainDeaths:0, mainGames:0,
+    gameLog:[], isTopPlayer:false
+  };
+
+  // 선수 헤더
+  const initials = (info.playname||'?').slice(0,2);
+  const isTop = s.isTopPlayer;
+  document.getElementById('player-header').innerHTML = `
+    <div class="player-avatar">${initials}</div>
+    <div class="player-info">
+      <div class="player-playname">${info.playname||playname}</div>
+      <div class="player-meta">
+        ${info.name ? `<span class="player-meta-item"><strong>${info.name}</strong></span>` : ''}
+        ${info.team ? `<span class="player-meta-item">팀 <strong>${info.team}</strong></span>` : ''}
+        ${info.club ? `<span class="player-meta-item">구단 <strong>${info.club}</strong></span>` : ''}
+        <span class="player-meta-item">출전 <strong>${(s.prelimGames||0)+(s.mainGames||0)}게임</strong></span>
+      </div>
+    </div>
+    ${isTop ? '<div class="top-player-badge">🏆 탑플레이어</div>' : ''}
+  `;
+
+  // 통합 스탯 카드
+  const kd = s.totalDeaths > 0 ? (s.totalKills / s.totalDeaths).toFixed(2) : s.totalKills.toFixed(2);
+  const totalGames = (s.prelimGames||0) + (s.mainGames||0);
+  const avgKill = totalGames > 0 ? (s.totalKills / totalGames).toFixed(1) : '0.0';
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">총 킬</div>
+      <div class="stat-value green">${s.totalKills||0}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">총 데스</div>
+      <div class="stat-value red">${s.totalDeaths||0}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">K / D</div>
+      <div class="stat-value gold">${kd}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">경기당 평균 킬</div>
+      <div class="stat-value blue">${avgKill}</div>
+      <div class="stat-sub">총 ${totalGames}게임</div>
+    </div>
+  `;
+
+  // 구간별 스탯
+  const pKD = s.prelimDeaths > 0 ? (s.prelimKills/s.prelimDeaths).toFixed(2) : (s.prelimKills||0).toFixed(2);
+  const mKD = s.mainDeaths   > 0 ? (s.mainKills/s.mainDeaths).toFixed(2)     : (s.mainKills||0).toFixed(2);
+  document.getElementById('stage-compare').innerHTML = `
+    <div class="stage-col">
+      <div class="stage-name">예선</div>
+      <div class="stage-stats">
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--green)">${s.prelimKills||0}</div>
+          <div class="stage-stat-lbl">킬</div>
+        </div>
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--red)">${s.prelimDeaths||0}</div>
+          <div class="stage-stat-lbl">데스</div>
+        </div>
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--gold)">${pKD}</div>
+          <div class="stage-stat-lbl">K/D</div>
+        </div>
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--muted)">${s.prelimGames||0}</div>
+          <div class="stage-stat-lbl">출전</div>
+        </div>
+      </div>
+    </div>
+    <div class="stage-col">
+      <div class="stage-name">본선</div>
+      <div class="stage-stats">
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--green)">${s.mainKills||0}</div>
+          <div class="stage-stat-lbl">킬</div>
+        </div>
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--red)">${s.mainDeaths||0}</div>
+          <div class="stage-stat-lbl">데스</div>
+        </div>
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--gold)">${mKD}</div>
+          <div class="stage-stat-lbl">K/D</div>
+        </div>
+        <div class="stage-stat">
+          <div class="stage-stat-val" style="color:var(--muted)">${s.mainGames||0}</div>
+          <div class="stage-stat-lbl">출전</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // 경기 로그
+  const log = s.gameLog || [];
+  const tbody = document.getElementById('game-tbody');
+  if (!log.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="no-data">아직 경기 기록이 없습니다</td></tr>';
+  } else {
+    tbody.innerHTML = log.map(g => {
+      const isPrelim = g.stage === '예선';
+      const badge = isPrelim
+        ? '<span class="badge badge-prelim">예선</span>'
+        : `<span class="badge badge-main">${g.stage}</span>`;
+      const kdEval = g.kills > g.deaths ? `<span class="kda-pos">킬 앞섬</span>`
+                   : g.kills < g.deaths ? `<span class="kda-neg">데스 앞섬</span>`
+                   : `<span class="kda-neu">동률</span>`;
+      return `<tr>
+        <td>${badge}</td>
+        <td>${g.gameNum}경기</td>
+        <td style="font-size:12px">${g.redTeam||''} <span style="color:var(--muted)">vs</span> ${g.blueTeam||''}</td>
+        <td style="color:var(--green);font-weight:700">${g.kills}</td>
+        <td style="color:var(--red);font-weight:700">${g.deaths}</td>
+        <td>${kdEval}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  status.style.display = 'none';
+  profile.classList.add('visible');
+}
+
+// ── URL 입력 UI ──────────────────────────────────────────
+let API_URL = 'https://script.google.com/macros/s/AKfycbzGKwiM1xKjwHU7q_eWsMcP7bKfA_SaXZoY187T5OsufjfRxRRgFGlcuOmdD19DvBZNMA/exec';
+
+function connectAPI(url) {
+  url = url.trim();
+  if (!url || !url.startsWith('https://script.google.com')) {
+    document.getElementById('api-setup-msg').textContent = '⚠ 올바른 Apps Script URL을 입력하세요.';
+    document.getElementById('api-setup-msg').style.color = 'var(--red)';
+    return;
+  }
+  API_URL = url;
+  localStorage.setItem('rookie_api_url', url);
+  document.getElementById('api-setup-box').style.display = 'none';
+  document.getElementById('update-bar').style.display = 'flex';
+  startPolling();
+}
+
+document.getElementById('api-connect-btn').addEventListener('click', function() {
+  connectAPI(document.getElementById('api-url-input').value);
+});
+document.getElementById('api-url-input').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') connectAPI(this.value);
+});
+
+// URL 고정 - 자동 시작
+document.getElementById('api-setup-box').style.display = 'none';
+document.getElementById('update-bar').style.display = 'flex';
+startPolling();
+</script>
+</body>
+</html>
